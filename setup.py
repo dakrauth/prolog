@@ -14,11 +14,11 @@ if os.path.exists(readme):
 VERSION = __import__('prolog').get_version()
 
 setup(
-    name='prolog,
+    name='prolog',
     version=VERSION,
     description='',
     long_description=long_description,
-    author=David Krauth',
+    author='David Krauth',
     author_email='dakrauth@gmail.com',
     url='https://github.com/dakrauth/prolog',
     packages=find_packages(exclude=('tests',)),
