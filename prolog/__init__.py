@@ -11,16 +11,13 @@ def get_version():
 def init(
     loggers=None,
     level='INFO',
-    handlers=None,
+    handlers='stream,file',
     propagate=False,
-    disable_existing=True
+    disable_existing=True,
+    reset_handlers=True
 ):
-    logging._handlers.clear()
-    del logging._handlerList[:]
 
-    handlers = handlers or 'stream,file'
-    if isinstance(handlers, str):
-        handlers = get_handlers(handlers, level)
+    handlers = get_handlers(handlers, level, reset_handlers)
 
     if not loggers:
         loggers = [logging.root]

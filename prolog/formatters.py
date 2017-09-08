@@ -1,13 +1,15 @@
+import sys
 import logging
 from textwrap import indent
-from .utils import Colorize, USE_DEFAULT, to_str
+from .config import config
 
 __all__ = ['PrologFormatter', 'ColorFormatter']
 
+
 class PrologFormatter(logging.Formatter):
-    DEFAULT_FMT = '[{asctime} {name}:{levelname}:{module}:{lineno}] {message}'
-    DEFAULT_DATEFMT = '%Y-%m-%dT%H:%M:%S'
-    DEFAULT_STYLE = '{'
+    DEFAULT_FMT = config.LONG_FMT
+    DEFAULT_DATEFMT = config.DATE_FMT
+    DEFAULT_STYLE = config.STYLE_FMT
 
     def __init__(self, **kwargs):
         super().__init__(
@@ -16,12 +18,30 @@ class PrologFormatter(logging.Formatter):
             style=kwargs.get('style', self.DEFAULT_STYLE)
         )
 
+    @staticmethod
+    def to_str(value):
+        '''
+        Convert value a string. If value is already a str or None, returne it
+        unchanged. If value is a byte, decode it as utf8. Otherwise, fall back
+        to the value's repr.
+        '''
+        if value is None:
+            return ''
+
+        if isinstance(value, str):
+            return value
+        
+        elif isinstance(value, bytes):
+            return value.decode()
+
+        return repr(value)
+
     def formatException(self, ei):
         return indent(super().formatException(ei), '... ')
 
     def formatMessage(self, record):
         try:
-            record.message = to_str(record.getMessage())
+            record.message = self.to_str(record.getMessage())
         except Exception as e:
             record.message = "Bad message (%r): %r" % (e, record.__dict__)
 
@@ -29,23 +49,54 @@ class PrologFormatter(logging.Formatter):
         #return formatted.replace("\n", "\n    ")
 
 
-class ColorFormatter(PrologFormatter):
-    DEFAULT_FMT = '{color}[{asctime} {name}:{levelname}:{module}:{lineno}]{endcolor} {message}'
-    DEFAULT_COLORS = {
-        logging.DEBUG: 'magenta',
-        logging.INFO: 'blue',
-        logging.WARNING: 'white,yellow',
-        logging.ERROR: 'white,red',
-    }
+_colors = ('black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white')
 
-    def __init__(self, colors=USE_DEFAULT, **kwargs):
+class Colorize:
+    fg = {_colors[x]: '3{}'.format(x) for x in range(8)}
+    bg = {_colors[x]: '4{}'.format(x) for x in range(8)}
+    reset = '\x1b[0m'
+
+    @classmethod
+    def style(cls, fg='', bg=''):
+        code_list = []
+        if fg:
+            code_list.append(cls.fg[fg])
+        
+        if bg:
+            code_list.append(cls.bg[bg])
+
+        return '\x1b[{}m'.format(';'.join(code_list)) if code_list else ''
+
+    @staticmethod
+    def supported(stream=sys.stderr):
+        return hasattr(stream, 'isatty') and stream.isatty()
+
+del _colors
+
+
+class ColorFormatter(PrologFormatter):
+    DEFAULT_FMT = config.COLOR_LONG_FMT
+    DEFAULT_COLORS = config.LEVEL_COLORS
+
+    def __init__(self, colors=None, **kwargs):
         super().__init__(**kwargs)
-        if colors and Colorize.supported():
-            self.colors = self.DEFAULT_COLORS if colors is USE_DEFAULT else colors
+        if Colorize.supported():
+            self.colors = self.normalize_colors(colors or self.DEFAULT_COLORS)
+        else:
+            self.colors = {}
+            
+    @staticmethod
+    def normalize_colors(colors):
+        if isinstance(colors, str):
+            colors = dict(
+                bits.split(':') for bits in colors.split(';') if bits
+            )
+
+        return {key: val.split(',') for key, val in colors.items()}
 
     def set_colors(self, record):
-        if record.levelno in self.colors:
-            record.color = Colorize.style(self.colors[record.levelno])
+        if record.levelname in self.colors:
+            record.color = Colorize.style(*self.colors[record.levelname])
             record.endcolor = Colorize.reset
         else:
             record.color = record.endcolor = ''
@@ -55,16 +106,13 @@ class ColorFormatter(PrologFormatter):
         return super().formatMessage(record)
 
 
-SHORT_FMT = "{levelname}:{name} {message}"
-DATE_FMT = "%Y-%m-%dT%H:%M:%S"
-STYLE_FMT = '{'
-
 registered_formatters = {
     'long': PrologFormatter(),
-    'short': PrologFormatter(fmt=SHORT_FMT, datefmt=None),
+    'short': PrologFormatter(fmt=config.SHORT_FMT, datefmt=None),
     'color': ColorFormatter(),
 }
 registered_formatters['default'] = registered_formatters['long']
+
 
 def get_formatter(arg=None):
     if arg is None:
@@ -82,9 +130,4 @@ def get_formatter(arg=None):
         return PrologFormatter(**arg)
     else:
         return PrologFormatter(*arg)
-
-
-def register_formatters(**kwargs):
-    global register_formatters
-    register_formatters.update(kwargs)
 
