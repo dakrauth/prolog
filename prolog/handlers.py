@@ -14,7 +14,14 @@ def create_handler(cls, level=config.LEVEL, formatter=None, **kwargs):
     return h
 
 
-def stream_handler(level=config.LEVEL, formatter='color', stream=None):
+def stream_handler(
+    level=config.STREAM_LEVEL,
+    formatter=config.STREAM_FORMATTER,
+    stream=config.STREAM_STREAM
+):
+    if isinstance(stream, str):
+        stream = config.resolve(stream)
+
     return create_handler(
         logging.StreamHandler,
         level,
@@ -24,11 +31,11 @@ def stream_handler(level=config.LEVEL, formatter='color', stream=None):
 
 
 def file_handler(
-    level=config.LEVEL,
-    formatter='long',
-    filename='prolog.log',
-    maxBytes=0,
-    backupCount=0
+    level=config.FILE_LEVEL,
+    formatter=config.FILE_FORMATTER,
+    filename=config.FILE_FILENAME,
+    maxBytes=config.FILE_MAX_BYTES,
+    backupCount=config.FILE_BACKUP_COUNT
 ):
     return create_handler(
         logging.handlers.RotatingFileHandler,

@@ -52,10 +52,10 @@ def parsecolors():
 
 
 def log_all_levels(logger):
-    logger.error('This is error')
-    logger.warning('This is warn')
-    logger.info('This is info')
-    logger.debug('This is debug')
+    logger.error('This is an error log message')
+    logger.warning('This is an warn log message')
+    logger.info('This is an info log message')
+    logger.debug('This is an debug log message')
 
 
 @register
