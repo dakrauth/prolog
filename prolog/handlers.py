@@ -3,7 +3,20 @@ import logging.handlers
 from .config import config
 from . import formatters
 
-__all__ = ['create_handler', 'stream_handler', 'file_handler', 'get_handlers']
+__all__ = [
+    'create_handler',
+    'stream_handler',
+    'file_handler',
+    'get_handlers',
+    'reset_handlers'
+]
+
+class PrologStreamHandler(logging.StreamHandler):
+    pass
+
+
+class PrologFileHandler(logging.handlers.RotatingFileHandler):
+    pass
 
 
 def create_handler(cls, level=config.LEVEL, formatter=None, **kwargs):
@@ -23,7 +36,7 @@ def stream_handler(
         stream = config.resolve(stream)
 
     return create_handler(
-        logging.StreamHandler,
+        PrologStreamHandler,
         level,
         formatter,
         stream=stream
@@ -38,7 +51,7 @@ def file_handler(
     backupCount=config.FILE_BACKUP_COUNT
 ):
     return create_handler(
-        logging.handlers.RotatingFileHandler,
+        PrologFileHandler,
         level,
         formatter,
         filename=filename,

@@ -9,7 +9,7 @@ def get_version():
     return '.'.join(map(str, VERSION))
 
 
-def init(
+def basic_config(
     loggers=None,
     level=config.LEVEL,
     handlers=config.HANDLERS,
@@ -20,13 +20,10 @@ def init(
     logging._acquireLock()
     try:
         handlers = get_handlers(handlers, level, reset_handlers)
+        names = config.logger_names(loggers)
 
-        if not loggers:
-            loggers = [logging.root]
-        elif isinstance(loggers, str):
-            loggers = [logging.getLogger(name) for name in loggers.split(',')]
-
-        for logger in loggers:
+        for name in names:
+            logger = logging.getLogger(name)
             logger.setLevel(level)
             logger.propagate = propagate
             for h in handlers:
