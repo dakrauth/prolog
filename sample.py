@@ -83,7 +83,7 @@ def parsecolors():
 
 @register
 def simple():
-    prolog.basic_config('simple', 'DEBUG', handlers='stream')
+    prolog.basic_config('simple', handlers='stream')
     logger = logging.getLogger('simple')
     log_all_levels(logger)
 

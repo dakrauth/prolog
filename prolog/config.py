@@ -58,23 +58,33 @@ class Config:
         self.load()
 
     def load(self):
-        self.load_cfg(self.user_cfg_filename)
-        self.load_cfg(self.local_cfg_filename)
-        self.load_env()
+        data = self.load_cfg(self.user_cfg_filename)
+        data.update(self.load_cfg(self.local_cfg_filename))
+        data.update(self.load_env())
+        self.update(**data)
 
     def load_cfg(self, filename=None):
         fpath = absolute_path(filename) if filename else self.user_cfg_filename
         if path.exists(fpath):
             with open(fpath) as fp:
-                data = json.load(fp)
+                text = fp.read()
+            if text:
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError as why:
+                    import warnings
+                    warnings.warn('Unable to parse file {}: {}'.format(
+                        fpath,
+                        str(why)
+                    ))
 
-            self.update(**data)
+        return {}
 
     def data(self):
         return data_dict(self)
 
     @classmethod
-    def default_data(self):
+    def default_data(cls):
         return data_dict(cls)
 
     def remove_cfg(self):
@@ -91,6 +101,7 @@ class Config:
             json.dump(self.data(), fp, indent='    ')
 
     def load_env(self):
+        data = {}
         n = len(self.env_prefix)
         for key, value in (
             (k[n:], v)
@@ -99,8 +110,8 @@ class Config:
         ):
             key = key.upper()
             if hasattr(self, key):
-                value = CONSTANTS.get(value.upper(), value)
-                setattr(self, key, value)
+                data[key] = CONSTANTS.get(value.upper(), value)
+        return data
 
     def update(self, **kwargs):
         self.__dict__.update(kwargs)

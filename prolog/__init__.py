@@ -3,10 +3,8 @@ from .formatters import *
 from .handlers import *
 from .config import config
 
-VERSION = (0, 1, 0)
-
-def get_version():
-    return '.'.join(map(str, VERSION))
+__version__ = (0, 1, 0)
+__version_string__ = '.'.join(map(str, __version__))
 
 
 def basic_config(

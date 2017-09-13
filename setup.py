@@ -11,7 +11,7 @@ if os.path.exists(readme):
     with open(readme, 'r') as f:
         long_description = f.read()
 
-VERSION = __import__('prolog').get_version()
+VERSION = __import__('prolog').__version_string__
 
 setup(
     name='prolog',
@@ -24,9 +24,8 @@ setup(
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
     license='MIT License',
-    entry_points={'console_scripts': ['prolo=prolog.__main__:main']},
+    entry_points={'console_scripts': ['prolog=prolog.__main__:main']},
     classifiers=[
-        # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
