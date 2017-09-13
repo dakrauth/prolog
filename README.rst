@@ -27,6 +27,8 @@ handler set to log to the default file - ``pypro.log`` - in the main app's direc
 Develop and testing
 ===================
 
+::
+
     $ pip install invoke
     $ inv develop
     $ inv test
