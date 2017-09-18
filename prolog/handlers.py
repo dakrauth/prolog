@@ -8,18 +8,32 @@ __all__ = [
     'stream_handler',
     'file_handler',
     'get_handlers',
-    'reset_handlers'
+    'reset_handlers',
+    'PrologStreamHandler',
+    'PrologFileHandler',
 ]
 
-class PrologStreamHandler(logging.StreamHandler):
+class PrologMixin:
+    
+    def setFormatter(self, formatter):
+        formatter = formatters.get_formatter(formatter)
+        super().setFormatter(formatter)
+
+
+class PrologStreamHandler(PrologMixin, logging.StreamHandler):
+    
+    def __init__(self, stream=None, **kwargs):
+        if isinstance(stream, str):
+            stream = config.string_import(stream)
+
+        super().__init__(stream=stream, **kwargs)
+
+
+class PrologFileHandler(PrologMixin, logging.handlers.RotatingFileHandler):
     pass
 
 
-class PrologFileHandler(logging.handlers.RotatingFileHandler):
-    pass
-
-
-def create_handler(cls, level=config.LEVEL, formatter=None, **kwargs):
+def create_handler(cls, level=config.LEVEL, formatter='default', **kwargs):
     formatter = formatters.get_formatter(formatter)
     h = cls(**kwargs)
     h.setFormatter(formatter)
@@ -32,15 +46,7 @@ def stream_handler(
     formatter=config.STREAM_FORMATTER,
     stream=config.STREAM_STREAM
 ):
-    if isinstance(stream, str):
-        stream = config.resolve(stream)
-
-    return create_handler(
-        PrologStreamHandler,
-        level,
-        formatter,
-        stream=stream
-    )
+    return create_handler(PrologStreamHandler, level, formatter, stream=stream)
 
 
 def file_handler(
@@ -96,10 +102,9 @@ def get_handlers(names, level, reset=True):
         elif isinstance(item, str):
             try:
                 handler = registered_handlers[item]
-            except KeyError:
-                raise NameError(
-                    '"{}" is not a recognized handler shortcut'.format(item)
-                )
+            except KeyError as e:
+                msg = '"{}" unrecognized handler shortcut'.format(item)
+                raise KeyError(msg) from e
 
             if not isinstance(handler, logging.Handler):
                 handler = handler(level)

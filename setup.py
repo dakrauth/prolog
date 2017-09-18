@@ -25,11 +25,16 @@ setup(
     include_package_data=True,
     license='MIT License',
     entry_points={'console_scripts': ['prolog=prolog.__main__:main']},
+    install_requires=['appdirs>=1.4.3'],
     classifiers=[
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Development Status :: 3 - Alpha',
+        'Environment :: Console',
+        'Topic :: System :: Logging',
+        'Topic :: Utilities',
     ],
 )

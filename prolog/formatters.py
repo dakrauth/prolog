@@ -122,10 +122,9 @@ def get_formatter(arg=None):
     elif isinstance(arg, str):
         try:
             return registered_formatters[arg]
-        except KeyError:
-            raise NameError(
-                '"{}" is not a recognized formatter shortcut'.format(arg)
-            )
+        except KeyError as e:
+            msg = '"{}" unrecognized formatter shortcut'.format(arg)
+            raise KeyError(msg) from e
     elif isinstance(arg, dict):
         return PrologFormatter(**arg)
     else:

@@ -1,12 +1,9 @@
 import os
 import json
+from appdirs import user_config_dir
+__all__ = ['BaseConfig', 'PrologConfig', 'dict_config', 'config']
 
 path = os.path
-
-CONFIG_DIRNAME = os.path.join(os.environ.get(
-    'XDG_CONFIG_HOME',
-    path.join(path.expanduser('~'), '.config')
-), 'pyprolog')
 
 CONSTANTS = {'TRUE': True, 'FALSE': False, 'NONE': None}
 
@@ -18,14 +15,147 @@ def data_dict(obj):
     return {k: getattr(obj, k) for k in dir(obj) if k.isupper() and k[0] != '_'}
 
 
-class Config:
+class BaseConfig:
+
+    def __init__(
+        self,
+        app_name,
+        env_prefix=None,
+        local_cfg_filename=None,
+        load_env=True,
+        load_user=True,
+        load_local=True
+    ):
+        self.env_prefix = env_prefix or (app_name.upper() + '_')
+
+        local_cfg_filename = local_cfg_filename or '.{}rc'.format(app_name)
+        self.local_cfg_filename = absolute_path(local_cfg_filename)
+        
+        fn = os.environ.get('{}_CONFIG'.format(self.env_prefix), None)
+        self.user_cfg_filename = absolute_path(fn) if fn else path.join(
+            user_config_dir(app_name),
+            'config.json'
+        )
+
+        data = self.load(load_user, load_local, load_env)
+        self.update(**data)
+
+    def load(self, load_user=True, load_local=True, load_env=True):
+        data = {}
+        if load_user:
+            data.update(self.load_user_cfg())
+
+        if load_local:
+            data.update(self.load_local_cfg())
+
+        if load_env:
+            data.update(self.load_env())
+        
+        return data
+
+    def load_env(self):
+        data = {}
+        n = len(self.env_prefix)
+        for key, value in (
+            (k[n:], v)
+            for k,v in os.environ.items()
+            if k.startswith(self.env_prefix)
+        ):
+            key = key.upper()
+            if hasattr(self, key):
+                data[key] = CONSTANTS.get(value.upper(), value)
+        return data
+
+    def load_cfg(self, filename):
+        fpath = absolute_path(filename)
+        if path.exists(fpath):
+            with open(fpath) as fp:
+                text = fp.read()
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError as why:
+                import warnings
+                msg = 'Unable to parse file {}: {}'.format(fpath, str(why))
+                warnings.warn(msg)
+        return {}
+
+    def load_user_cfg(self):
+        return self.load_cfg(self.user_cfg_filename)
+
+    def load_local_cfg(self):
+        return self.load_cfg(self.local_cfg_filename)
+
+    def save_cfg(self, filename):
+        dirname = path.dirname(filename)
+        if dirname and not path.exists(dirname):
+            os.makedirs(dirname)
+
+        with open(filename, 'w') as fp:
+            json.dump(self.data(), fp, indent='    ')
+
+    def save_user_cfg(self):
+        self.save_cfg(self.user_cfg_filename)
+
+    def save_local_cfg(self):
+        self.save_cfg(self.local_cfg_filename)
+
+    def remove_cfg(self):
+        if path.exists(self.user_cfg_filename):
+            os.remove(self.user_cfg_filename)
+
+    def reset(self):
+        for key in self.default_data().keys():
+            self.__dict__.pop(key, None)
+
+    def data(self):
+        return data_dict(self)
+
+    def update(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+    def logger_names(self, names=None):
+        if not names:
+            names = [None]
+        elif isinstance(names, str):
+            names = names.split(',')
+
+        return names
+
+    def resolve(self, label, value, default=None):
+        if value is None:
+            value = self.__dict__.get(label, default)
+
+        return value
+
+    @classmethod
+    def default_data(cls):
+        return data_dict(cls)
+
+    @staticmethod
+    def string_import(dotted_path):
+        try:
+            mod_path, attr = dotted_path.rsplit('.', 1)
+        except ValueError:
+            raise ImportError('{} not a dotted path string'.format(dotted_path))
+
+        mod = __import__(mod_path)
+
+        try:
+            return getattr(mod, attr)
+        except AttributeError:
+            raise ImportError('Module "{}" has no "{}" attribute'.format(
+                mod_path, attr
+            ))
+
+
+class PrologConfig(BaseConfig):
     LEVEL = 'INFO'
     SHORT_FMT = "{levelname}:{name} {message}"
     LONG_FMT = '[{asctime} {name}:{levelname}:{module}:{lineno}] {message}'
 
     COLOR_LONG_FMT = '{color}[{asctime} {name}:{levelname}:{module}:{lineno}]{endcolor} {message}'
     COLOR_SHORT_FMT = '{color}{levelname}:{name}{endcolor} {message}'
-    LEVEL_COLORS = 'DEBUG:magenta;INFO:blue;WARNING:white,yellow;ERROR:white,red'
+    LEVEL_COLORS = 'DEBUG:magenta;INFO:blue;WARNING:yellow;ERROR:red;CRITICAL:white,red'
 
     DATE_FMT = "%Y-%m-%dT%H:%M:%S"
     STYLE_FMT = '{'
@@ -45,106 +175,11 @@ class Config:
     FILE_MAX_BYTES = 0
     FILE_BACKUP_COUNT = 0
 
-    def __init__(self, env_prefix='PYPROLOG_', local_cfg_filename='.pyprolog'):
-        self.env_prefix = env_prefix
-        self.local_cfg_filename = absolute_path(local_cfg_filename)
-        
-        fn = os.environ.get('{}_CONFIG'.format(self.env_prefix), None)
-        self.user_cfg_filename = absolute_path(fn) if fn else path.join(
-            CONFIG_DIRNAME,
-            'config.json'
-        )
 
-        self.load()
-
-    def load(self):
-        data = self.load_cfg(self.user_cfg_filename)
-        data.update(self.load_cfg(self.local_cfg_filename))
-        data.update(self.load_env())
-        self.update(**data)
-
-    def load_cfg(self, filename=None):
-        fpath = absolute_path(filename) if filename else self.user_cfg_filename
-        if path.exists(fpath):
-            with open(fpath) as fp:
-                text = fp.read()
-            if text:
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError as why:
-                    import warnings
-                    warnings.warn('Unable to parse file {}: {}'.format(
-                        fpath,
-                        str(why)
-                    ))
-
-        return {}
-
-    def data(self):
-        return data_dict(self)
-
-    @classmethod
-    def default_data(cls):
-        return data_dict(cls)
-
-    def remove_cfg(self):
-        if path.exists(self.user_cfg_filename):
-            os.remove(self.user_cfg_filename)
-
-    def save_cfg(self, filename=None):
-        fpath = absolute_path(filename) if filename else self.user_cfg_filename
-        dirname = path.dirname(fpath)
-        if dirname and not path.exists(dirname):
-            os.makedirs(dirname)
-
-        with open(self.user_cfg_filename, 'w') as fp:
-            json.dump(self.data(), fp, indent='    ')
-
-    def load_env(self):
-        data = {}
-        n = len(self.env_prefix)
-        for key, value in (
-            (k[n:], v)
-            for k,v in os.environ.items()
-            if k.startswith(self.env_prefix)
-        ):
-            key = key.upper()
-            if hasattr(self, key):
-                data[key] = CONSTANTS.get(value.upper(), value)
-        return data
-
-    def update(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    def logger_names(self, names=None):
-        if not names:
-            names = [None]
-        elif isinstance(names, str):
-            names = names.split(',')
-
-        return names
-
-    @staticmethod
-    def resolve(dotted_path):
-        try:
-            mod_path, attr = dotted_path.rsplit('.', 1)
-        except ValueError:
-            raise ImportError('{} not a dotted path string'.format(dotted_path))
-
-        mod = __import__(mod_path)
-
-        try:
-            return getattr(mod, attr)
-        except AttributeError:
-            raise ImportError('Module "{}" has no "{}" attribute'.format(
-                mod_path, attr
-            ))
+config = PrologConfig('pyprolog')
 
 
-config = Config()
-
-
-def config_dict(
+def dict_config(
     loggers=None,
     level=config.LEVEL,
     propagate=config.PROPAGATE,

@@ -12,8 +12,8 @@ def clean(ctx):
 def develop(ctx):
     '''Install development requirements'''
     ctx.run('pip install -U pip', pty=True)
-    ctx.run('pip install -r requirements.txt', pty=True)
     ctx.run('pip install -e .', pty=True)
+    ctx.run('pip install -r test-requirements.txt', pty=True)
 
 @task
 def test(ctx):
