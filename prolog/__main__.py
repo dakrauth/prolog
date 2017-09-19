@@ -30,17 +30,15 @@ def reset_logging():
 
 
 def log_all_levels(logger):
-    logger.critical('This is a critical log message')
-    logger.error('This is an error log message')
-    logger.warning('This is a warning log message')
-    logger.info('This is an info log message')
-    logger.debug('This is a debug log message')
+    for level, name in sorted(logging._levelToName.items()):
+        logger.log(level, 'A sample {} message'.format(name.lower()))
+
     if logging_tree:
         print('\nLogging Tree:')
         logging_tree.printout()
 
 
-def simple(level='INFO'):
+def basic(level='INFO'):
     basic_config('simple', handlers='stream', level=level)
     logger = logging.getLogger('simple')
     log_all_levels(logger)
@@ -64,9 +62,7 @@ def dictconfig(level='INFO'):
     log_all_levels(logger)
 
 
-samples = {f.__name__: f for f in [simple, stream, dictconfig]}
-
-
+samples = {f.__name__: f for f in [basic, stream, dictconfig]}
 def sample_cmd(name, level):
     samples[name](level)
 
@@ -99,12 +95,15 @@ def save_cmd(where='user'):
 
 def info_cmd():
     ucf = config.user_cfg_filename
-    print('User config location:', ucf)
-    print('    file exists: {}, directory exists: {}'.format(
+    print('User config location:\n--- {}'.format(ucf))
+    print('--- file exists: {}, dir exists: {}'.format(
         os.path.exists(ucf),
         os.path.exists(os.path.dirname(ucf))
     ))
-    print('Local config filename:', config.local_cfg_filename)
+    print('Local config filename:\n--- {}'.format(config.local_cfg_filename))
+    print('Log level names and values')
+    for key, val in logging._nameToLevel.items():
+        print('--- {:10}: {}'.format(key, val))
 
 
 def parse_args(args=None):
@@ -162,10 +161,10 @@ def parse_args(args=None):
 
 def main():
     args = parse_args()
+    func = args.pop('func', None)
     if args.pop('pdb', False):
         pdb.set_trace()
 
-    func = args.pop('func', None)
     if func:
         func(**args)
 
