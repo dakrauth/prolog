@@ -30,7 +30,8 @@ comma-seperated names of the desired loggers::
 
     prolog.basic_config('myapp,another_app')
 
-``basic_config`` accepts the following parameters::
+``basic_config`` accepts the following parameters:
+
 
 ``loggers``
     The desired loggers to configure; can be either a comma-separated
@@ -58,6 +59,18 @@ comma-seperated names of the desired loggers::
     preceding parameters except for ``loggers`` set to None (the default),
     ``cfg`` will be used to determine the appropriate setting.
 
+
+Examples
+--------
+
+Once installed, **prolog** can be invoked to show configuration settings or
+sample usage.
+
+::
+
+    $ python -m prolog sample --level=DEBUG basic
+
+.. image:: resources/basic-output.png
 
 Develop and testing
 ===================
