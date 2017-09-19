@@ -64,13 +64,18 @@ Examples
 --------
 
 Once installed, **prolog** can be invoked to show configuration settings or
-sample usage.
-
-::
+sample usage::
 
     $ python -m prolog sample --level=DEBUG basic
 
-.. image:: resources/basic-output.png
+.. image:: https://raw.githubusercontent.com/dakrauth/prolog/master/resources/basic-output.png
+
+Setting colors via environments variables::
+
+    $ export PYPROLOG_LEVEL_COLORS='CRITICAL:white,red;ERROR:lightred;DEBUG:lightgray,cyan;*:gray,gray'
+    $ python -m prolog sample --level=DEBUG basic
+
+.. image:: https://raw.githubusercontent.com/dakrauth/prolog/master/resources/env-color-output.png
 
 Develop and testing
 ===================
