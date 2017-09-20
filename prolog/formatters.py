@@ -49,11 +49,23 @@ class PrologFormatter(logging.Formatter):
         #return formatted.replace("\n", "\n    ")
 
 
-_colors = ('black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white')
-
 class Colorize:
-    fg = {_colors[x]: '3{}'.format(x) for x in range(8)}
-    bg = {_colors[x]: '4{}'.format(x) for x in range(8)}
+    fg = {
+        'gray':      '0;30', 'black':        '1;30', 'darkgray':    '0;30',
+        'red':       '0;31', 'lightred':     '1;31', 'darkred':     '0;31',
+        'green':     '0;32', 'lightgreen':   '1;32', 'darkgreen':   '0;32',
+        'brown':     '0;33', 'lightbrown':   '1;33', 'darkbrown':   '0;33', 
+        'blue':      '0;34', 'lightblue':    '1;34', 'darkblue':    '0;34',
+        'magenta':   '0;35', 'lightmagenta': '1;35', 'darkmagenta': '0;35',
+        'purple':    '0;35', 'lightpurple':  '1;35', 'darkpurple':  '0;35',
+        'cyan':      '0;36', 'lightcyan':    '1;36', 'darkcyan':    '0;36',
+        'lightgray': '0;37', 'white':        '1;37', 'yellow':      '1;33',
+    }
+    bg = {
+        'black': '40', 'red':    '41', 'green':   '42',
+        'brown': '43', 'blue':   '44', 'magenta': '45',
+        'cyan':  '46', 'purple': '45', 'gray':    '47',
+    }
     reset = '\x1b[0m'
 
     @classmethod
@@ -70,8 +82,6 @@ class Colorize:
     @staticmethod
     def supported(stream=sys.stderr):
         return hasattr(stream, 'isatty') and stream.isatty()
-
-del _colors
 
 
 class ColorFormatter(PrologFormatter):
@@ -92,7 +102,14 @@ class ColorFormatter(PrologFormatter):
                 bits.split(':') for bits in colors.split(';') if bits
             )
 
-        return {key: val.split(',') for key, val in colors.items()}
+        colors = {key: val.split(',') for key, val in colors.items()}
+        default = colors.pop('*', False)
+        if default:
+            for level in logging._nameToLevel:
+                if level not in colors:
+                    colors[level] = default
+
+        return colors
 
     def set_colors(self, record):
         if record.levelname in self.colors:
