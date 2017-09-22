@@ -6,7 +6,7 @@ PYWARN='python -Wd'
 @task
 def clean(ctx):
     '''Remove build artifacts'''
-    ctx.run('rm -rf .cache build prolog.egg-info .coverage')
+    ctx.run('rm -rf .cache build prolog.egg-info .coverage htmlcov')
 
 @task
 def develop(ctx):

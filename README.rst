@@ -21,8 +21,8 @@ application code::
     import prolog
     prolog.basic_config()
 
-will configure the ``root`` logger for the default level ``logging.INFO`` and
-set up two handlers: a colorized, console streaming handler, as well as a file
+This will configure the ``root`` logger for the default level ``logging.INFO``
+and set up two handlers: a colorized, console streaming handler, as well as a file
 handler set to log to the default file - ``pypro.log`` - in the main app's directory.
 
 To specify select loggers defined in application or library code, you pass the

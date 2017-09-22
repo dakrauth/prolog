@@ -99,6 +99,7 @@ def get_handlers(names, level, reset=True):
     for item in extract_items(names):
         if isinstance(item, logging.Handler):
             handler = item
+
         elif isinstance(item, str):
             try:
                 handler = registered_handlers[item]
@@ -109,6 +110,10 @@ def get_handlers(names, level, reset=True):
             if not isinstance(handler, logging.Handler):
                 handler = handler(level)
                 registered_handlers[item] = handler
+
+        elif issubclass(item, logging.Handler):
+            raise ValueError('Cannot instantiate from ...Handler class ')
+
         else:
             handler = item(level)
 

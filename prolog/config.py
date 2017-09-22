@@ -122,10 +122,7 @@ class BaseConfig:
         return names
 
     def resolve(self, label, value, default=None):
-        if value is None:
-            value = self.__dict__.get(label, default)
-
-        return value
+        return getattr(self, label, default) if value is None else value
 
     @classmethod
     def default_data(cls):
@@ -181,54 +178,61 @@ config = PrologConfig('pyprolog')
 
 def dict_config(
     loggers=None,
-    level=config.LEVEL,
-    propagate=config.PROPAGATE,
-    disable_existing=config.DISABLE_EXISTING,
+    level=None,
+    propagate=None,
+    disable_existing=None,
+    cfg=None
 ):
+    '''
+    Generate a configuration dict to use with ``logging.config.dictConfig``
+    '''
+    cfg = cfg or config
+    level = cfg.resolve('LEVEL', level, 'INFO')
+    propagate = cfg.resolve('PROPAGATE', propagate)
     dct = {
         'version': 1,
-        'disable_existing_loggers': disable_existing,
+        'disable_existing_loggers': cfg.resolve('DISABLE_EXISTING', disable_existing),
         'formatters': {
             'long': {
                 '()': 'prolog.formatters.PrologFormatter',
-                'format': config.LONG_FMT,
-                'datefmt': config.DATE_FMT,
-                'style': config.STYLE_FMT
+                'format': cfg.LONG_FMT,
+                'datefmt': cfg.DATE_FMT,
+                'style': cfg.STYLE_FMT
             },
             'short': {
                 '()': 'prolog.formatters.PrologFormatter',
-                'format': config.SHORT_FMT,
+                'format': cfg.SHORT_FMT,
                 'datefmt': '',
-                'style': config.STYLE_FMT
+                'style': cfg.STYLE_FMT
             },
             'color': {
                 '()': 'prolog.formatters.ColorFormatter',
-                'format': config.COLOR_LONG_FMT,
-                'datefmt': config.DATE_FMT,
-                'style': config.STYLE_FMT,
-                'colors': config.LEVEL_COLORS
+                'format': cfg.COLOR_LONG_FMT,
+                'datefmt': cfg.DATE_FMT,
+                'style': cfg.STYLE_FMT,
+                'colors': cfg.LEVEL_COLORS
             }
         },
         'handlers': {
             'stream': {
                 'class': 'prolog.handlers.PrologStreamHandler',
-                'level': config.STREAM_LEVEL,
+                'level': cfg.STREAM_LEVEL,
                 'formatter': 'color',
             },
             'file': {
                 'class': 'prolog.handlers.PrologFileHandler',
-                'level': config.FILE_LEVEL,
+                'level': cfg.FILE_LEVEL,
                 'formatter': 'long',
-                'filename': config.FILE_FILENAME,
-                'maxBytes': config.FILE_MAX_BYTES,
-                'backupCount': config.FILE_BACKUP_COUNT
+                'filename': cfg.FILE_FILENAME,
+                'maxBytes': cfg.FILE_MAX_BYTES,
+                'backupCount': cfg.FILE_BACKUP_COUNT
             }
         },
         'loggers': {}
     }
 
-    handlers = config.HANDLERS.split(',')
-    for name in config.logger_names(loggers):
+    handlers = cfg.HANDLERS.split(',')
+    for name in cfg.logger_names(loggers):
         cfg = {'handlers': handlers, 'level': level, 'propagate': propagate}
         if name:
             dct['loggers'][name] = cfg

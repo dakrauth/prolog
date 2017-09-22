@@ -3,7 +3,7 @@ import logging
 from textwrap import indent
 from .config import config
 
-__all__ = ['PrologFormatter', 'ColorFormatter']
+__all__ = ['PrologFormatter', 'ColorFormatter', 'Colorize']
 
 
 class PrologFormatter(logging.Formatter):
@@ -41,7 +41,8 @@ class PrologFormatter(logging.Formatter):
 
     def formatMessage(self, record):
         try:
-            record.message = self.to_str(record.getMessage())
+            record.msg = self.to_str(record.msg)
+            record.message = record.getMessage()
         except Exception as e:
             record.message = "Bad message (%r): %r" % (e, record.__dict__)
 
