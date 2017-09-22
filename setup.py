@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+'''
+Simple, robust features for expediting application logging configuration
+'''
 import os
 import sys
-
 from setuptools import find_packages, setup
+
+
 
 long_description = ''
 readme = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.rst')
@@ -16,7 +19,7 @@ VERSION = __import__('prolog').__version_string__
 setup(
     name='prolog',
     version=VERSION,
-    description='',
+    description=__doc__.strip(),
     long_description=long_description,
     author='David Krauth',
     author_email='dakrauth@gmail.com',
