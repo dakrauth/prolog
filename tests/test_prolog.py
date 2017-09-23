@@ -1,6 +1,8 @@
 import os
 import io
+import json
 import logging
+import logging.config
 from prolog import *
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -82,3 +84,57 @@ def test_get_handlers(cfg):
     handlers = get_handlers('file,stream', 'NOTSET')
     assert isinstance(handlers[0], PrologFileHandler)
     assert isinstance(handlers[1], PrologStreamHandler)
+
+
+def test_cfg_files(cfg):
+    filename = '.pyprologtestrc'
+    cfg.save_local_cfg()
+    assert cfg.local_cfg_filename == filename
+    assert os.path.exists(filename)
+
+    cfg.SHORT_FMT = 'foo bar baz'
+    data = cfg.load(load_user=False, load_env=False)
+    cfg.update(**data)
+    assert cfg.SHORT_FMT == PrologConfig.SHORT_FMT
+    
+    os.remove(filename)
+    assert not os.path.exists(filename)
+
+    data = cfg.load_cfg(__file__)
+    assert data == {}
+
+    cfg.SHORT_FMT = 'foo bar baz'
+    cfg.reset()
+    assert cfg.SHORT_FMT == PrologConfig.SHORT_FMT
+
+
+def test_dict_config(cfg):
+    dct = dict_config(loggers='foo,bar', cfg=cfg)
+    assert 'foo' in dct['loggers']
+    assert 'bar' in dct['loggers']
+    assert 'root' not in dct
+
+    dct = dict_config(cfg=cfg)
+    assert 'root' in dct
+
+
+def test_string_import(cfg):
+    AppDirs = cfg.string_import('appdirs.AppDirs')
+    assert hasattr(AppDirs, 'site_config_dir')
+
+    try:
+        cfg.string_import('foobarbazspameggs')
+    except ImportError:
+        assert True
+    else:
+        assert False
+
+    try:
+        cfg.string_import('tempfile.TemporaryDirectoryXYZ')
+    except ImportError:
+        assert True
+    else:
+        assert False
+
+
+

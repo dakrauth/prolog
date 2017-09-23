@@ -60,6 +60,7 @@ comma-seperated names of the desired loggers::
     ``cfg`` will be used to determine the appropriate setting.
 
 
+
 Examples
 --------
 
@@ -85,3 +86,60 @@ Develop and testing
     $ pip install invoke
     $ inv develop
     $ inv test
+
+Configuration
+=============
+
+Prolog can be configured via a number of different options:
+
+* User-level configuration file, using ``appdirs`` to determine the user's
+  configuration directory plus ``pyprolog/config``, which must be a JSON encoded
+  file containing a dictionary overriding any of the defaults listed below
+* Current working directory configuration file ``.pyprologrc``, also JSON
+* Environment variables, see below
+* Manipulation of the default ``prolog.config.config`` instance or instantiating
+  your own
+* Generating a ``logging.config.dictConfig`` dict via ``prolog.config.dict_config``
+
+Defaults
+--------
+
+::
+
+    LEVEL = 'INFO'
+    SHORT_FMT = "{levelname}:{name} {message}"
+    LONG_FMT = '[{asctime} {name}:{levelname}:{module}:{lineno}] {message}'
+
+    COLOR_LONG_FMT = '{color}[{asctime} {name}:{levelname}:{module}:{lineno}]{endcolor} {message}'
+    COLOR_SHORT_FMT = '{color}{levelname}:{name}{endcolor} {message}'
+    LEVEL_COLORS = 'DEBUG:magenta;INFO:blue;WARNING:yellow;ERROR:red;CRITICAL:white,red'
+
+    DATE_FMT = "%Y-%m-%dT%H:%M:%S"
+    STYLE_FMT = '{'
+
+    HANDLERS = 'stream,file'
+    PROPAGATE = False
+    DISABLE_EXISTING = True
+    RESET_HANDLERS = True
+
+    STREAM_LEVEL = 'NOTSET'
+    STREAM_FORMATTER = 'color'
+    STREAM_STREAM = 'sys.stderr'
+
+    FILE_LEVEL = 'NOTSET'
+    FILE_FORMATTER = 'long'
+    FILE_FILENAME = 'pypro.log'
+    FILE_MAX_BYTES = 0
+    FILE_BACKUP_COUNT = 0
+
+Environment
+-----------
+
+By default, the ``prolog.config.config`` instance will load any environment
+variable begging with ``PYPROLOG_`` and ending with any of the defaults listed
+above. For instance, to override the default logging level, do the following
+before executing your application code::
+
+    $ export PYPROLOG_LEVEL='DEBUG'
+    $ python myapp.py
+
