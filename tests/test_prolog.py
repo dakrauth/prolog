@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import logging.config
+import pytest
 from prolog import *
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -100,8 +101,9 @@ def test_cfg_files(cfg):
     os.remove(filename)
     assert not os.path.exists(filename)
 
-    data = cfg.load_cfg(__file__)
-    assert data == {}
+    with pytest.warns(UserWarning):
+        data = cfg.load_cfg(__file__)
+        assert data == {}
 
     cfg.SHORT_FMT = 'foo bar baz'
     cfg.reset()
@@ -122,19 +124,12 @@ def test_string_import(cfg):
     AppDirs = cfg.string_import('appdirs.AppDirs')
     assert hasattr(AppDirs, 'site_config_dir')
 
-    try:
+    with pytest.raises(ImportError):
         cfg.string_import('foobarbazspameggs')
-    except ImportError:
-        assert True
-    else:
-        assert False
 
-    try:
+    with pytest.raises(ImportError):
         cfg.string_import('tempfile.TemporaryDirectoryXYZ')
-    except ImportError:
-        assert True
-    else:
-        assert False
+
 
 
 
