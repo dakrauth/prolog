@@ -3,10 +3,6 @@ from .formatters import *
 from .handlers import *
 from .config import *
 
-__version__ = (0, 1, 1)
-__version_string__ = '.'.join(map(str, __version__))
-
-
 def basic_config(
     loggers=None,
     level=None,

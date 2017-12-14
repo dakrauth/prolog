@@ -6,6 +6,12 @@ import os
 import sys
 from setuptools import find_packages, setup
 
+NAME = 'prolog'
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+about = {}
+with open(os.path.join(HERE, NAME, '__version__.py')) as f:
+    exec(f.read(), about)
 
 
 long_description = ''
@@ -14,11 +20,9 @@ if os.path.exists(readme):
     with open(readme, 'r') as f:
         long_description = f.read()
 
-VERSION = __import__('prolog').__version_string__
-
 setup(
-    name='prolog',
-    version=VERSION,
+    name=NAME,
+    version=about['__version__'],
     description=__doc__.strip(),
     long_description=long_description,
     author='David Krauth',
