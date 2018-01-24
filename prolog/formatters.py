@@ -11,11 +11,11 @@ class PrologFormatter(logging.Formatter):
     DEFAULT_DATEFMT = config.DATE_FMT
     DEFAULT_STYLE = config.STYLE_FMT
 
-    def __init__(self, **kwargs):
+    def __init__(self, fmt=None, datefmt=None, style=None):
         super().__init__(
-            fmt=kwargs.get('fmt', self.DEFAULT_FMT),
-            datefmt=kwargs.get('datefmt', self.DEFAULT_DATEFMT),
-            style=kwargs.get('style', self.DEFAULT_STYLE)
+            fmt=fmt or self.DEFAULT_FMT,
+            datefmt=datefmt or self.DEFAULT_DATEFMT,
+            style=style or self.DEFAULT_STYLE
         )
 
     @staticmethod
@@ -89,8 +89,8 @@ class ColorFormatter(PrologFormatter):
     DEFAULT_FMT = config.COLOR_LONG_FMT
     DEFAULT_COLORS = config.LEVEL_COLORS
 
-    def __init__(self, colors=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, fmt=None, datefmt=None, style=None, colors=None):
+        super().__init__(fmt, datefmt, style)
         if Colorize.supported():
             self.colors = self.normalize_colors(colors or self.DEFAULT_COLORS)
         else:
