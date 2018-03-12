@@ -16,12 +16,15 @@ def develop(ctx):
     ctx.run('pip install -r test-requirements.txt', pty=True)
 
 @task
-def test(ctx):
+def test(ctx, show=False, test=None):
     '''Run tests and coverage'''
     ctx.run(
-        "py.test --cov-config .coveragerc --cov-report html --cov-report term --cov=prolog",
+        "pytest --cov-config .coveragerc --cov-report html --cov-report term --cov=prolog",
         pty=True
     )
+
+    if show:
+        cov(ctx)
 
 @task
 def cov(ctx):
