@@ -1,5 +1,5 @@
 import pytest
-from prolog import PrologConfig
+from prolog.config import PrologConfig
 
 
 @pytest.fixture

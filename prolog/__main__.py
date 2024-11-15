@@ -17,7 +17,9 @@ try:
 except ImportError:
     import pdb
 
-from . import *
+from . import basic_config
+from .config import config, dict_config
+from .handlers import stream_handler, reset_handlers
 
 
 def reset_logging():
@@ -55,7 +57,6 @@ def stream(level="INFO"):
 
 
 def dictconfig(level="INFO"):
-    cfg = dict_config()
     dct = dict_config("dictconfig", level=level)
     logging.config.dictConfig(dct)
     logger = logging.getLogger("dictconfig")

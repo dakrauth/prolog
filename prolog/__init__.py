@@ -1,7 +1,6 @@
 import logging
-from .formatters import *
-from .handlers import *
-from .config import *
+from .handlers import get_handlers
+from .config import config
 
 
 def basic_config(

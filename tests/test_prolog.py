@@ -1,10 +1,19 @@
 import os
 import io
-import json
 import logging
 import logging.config
 import pytest
-from prolog import *
+
+from prolog import basic_config
+from prolog.config import PrologConfig, dict_config
+from prolog.formatters import Colorize, ColorFormatter
+from prolog.handlers import (
+    stream_handler,
+    file_handler,
+    get_handlers,
+    PrologFileHandler,
+    PrologStreamHandler,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,7 +58,7 @@ def test_bytes_and_exc(cfg):
     logger = logging.getLogger("bytes")
     try:
         1 / 0
-    except:
+    except Exception:
         logger.error("Oöps!".encode(), exc_info=1)
 
     results = iostr.getvalue()
