@@ -4,24 +4,23 @@ from .config import config
 from . import formatters
 
 __all__ = [
-    'create_handler',
-    'stream_handler',
-    'file_handler',
-    'get_handlers',
-    'reset_handlers',
-    'PrologStreamHandler',
-    'PrologFileHandler',
+    "create_handler",
+    "stream_handler",
+    "file_handler",
+    "get_handlers",
+    "reset_handlers",
+    "PrologStreamHandler",
+    "PrologFileHandler",
 ]
 
+
 class PrologMixin:
-    
     def setFormatter(self, formatter):
         formatter = formatters.get_formatter(formatter)
         super().setFormatter(formatter)
 
 
 class PrologStreamHandler(PrologMixin, logging.StreamHandler):
-    
     def __init__(self, stream=None, **kwargs):
         if isinstance(stream, str):
             stream = config.string_import(stream)
@@ -33,7 +32,7 @@ class PrologFileHandler(PrologMixin, logging.handlers.RotatingFileHandler):
     pass
 
 
-def create_handler(cls, level=config.LEVEL, formatter='default', **kwargs):
+def create_handler(cls, level=config.LEVEL, formatter="default", **kwargs):
     formatter = formatters.get_formatter(formatter)
     h = cls(**kwargs)
     h.setFormatter(formatter)
@@ -44,7 +43,7 @@ def create_handler(cls, level=config.LEVEL, formatter='default', **kwargs):
 def stream_handler(
     level=config.STREAM_LEVEL,
     formatter=config.STREAM_FORMATTER,
-    stream=config.STREAM_STREAM
+    stream=config.STREAM_STREAM,
 ):
     return create_handler(PrologStreamHandler, level, formatter, stream=stream)
 
@@ -54,7 +53,7 @@ def file_handler(
     formatter=config.FILE_FORMATTER,
     filename=config.FILE_FILENAME,
     maxBytes=config.FILE_MAX_BYTES,
-    backupCount=config.FILE_BACKUP_COUNT
+    backupCount=config.FILE_BACKUP_COUNT,
 ):
     return create_handler(
         PrologFileHandler,
@@ -62,14 +61,11 @@ def file_handler(
         formatter,
         filename=filename,
         maxBytes=maxBytes,
-        backupCount=backupCount
+        backupCount=backupCount,
     )
 
 
-registered_handlers = {
-    'stream': stream_handler,
-    'file': file_handler
-}
+registered_handlers = {"stream": stream_handler, "file": file_handler}
 
 
 def reset_handlers():
@@ -79,13 +75,13 @@ def reset_handlers():
 
 def extract_items(names):
     if isinstance(names, str):
-        names = names.split(',')
+        names = names.split(",")
     elif not isinstance(names, (list, tuple)):
         names = [names]
 
     for name in names:
         if isinstance(name, str):
-            for subname in name.split(','):
+            for subname in name.split(","):
                 yield subname
         else:
             yield name
@@ -112,7 +108,7 @@ def get_handlers(names, level, reset=True):
                 registered_handlers[item] = handler
 
         elif issubclass(item, logging.Handler):
-            raise ValueError('Cannot instantiate from ...Handler class ')
+            raise ValueError("Cannot instantiate from ...Handler class ")
 
         else:
             handler = item(level)
